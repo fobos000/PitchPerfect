@@ -17,7 +17,6 @@ class PlaySoundsViewController: UIViewController {
     
     var receivedAudio:RecordedAudio!
     var player:AVAudioPlayer!
-    var timer:NSTimer!
     var audioEngine:AVAudioEngine!
     var audioFile:AVAudioFile!
     
@@ -37,15 +36,11 @@ class PlaySoundsViewController: UIViewController {
     }
     
     @IBAction func slowPlaybackTapped(sender: UIButton) {
-        player.stop()
-        player.rate = 0.5
-        player.play()
+        playAudioWithVariableRate(0.5)
     }
     
     @IBAction func fastPlaybackTapped(sender: UIButton) {
-        player.stop()
-        player.rate = 2.0
-        player.play()
+        playAudioWithVariableRate(2.0)
     }
     
     @IBAction func chipmunkTapped(sender: UIButton) {
@@ -57,13 +52,24 @@ class PlaySoundsViewController: UIViewController {
     }
     
     @IBAction func stopTapped(sender: UIButton) {
+        stopPlayback()
+    }
+    
+    func stopPlayback() {
+        audioEngine.stop()
+        audioEngine.reset()
         player.stop()
+        player.currentTime = 0
+    }
+    
+    func playAudioWithVariableRate(rate: Float) {
+        stopPlayback()
+        player.rate = rate
+        player.play()
     }
     
     func playAudioWithVariablePitch(pitch: Float){
-        player.stop()
-        audioEngine.stop()
-        audioEngine.reset()
+        stopPlayback()
         
         let audioPlayerNode = AVAudioPlayerNode()
         audioEngine.attachNode(audioPlayerNode)

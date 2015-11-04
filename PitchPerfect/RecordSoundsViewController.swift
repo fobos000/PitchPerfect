@@ -14,29 +14,17 @@ class RecordSoundsViewController: UIViewController, AVAudioRecorderDelegate {
     @IBOutlet weak var recordButton: UIButton!
     @IBOutlet weak var stopButton: UIButton!
     @IBOutlet weak var recordingLabel: UILabel!
+    @IBOutlet weak var tapToRecordLabel: UILabel!
     
     var audioRecorder:AVAudioRecorder!
-    var recordedAudio:RecordedAudio!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-    }
     
     override func viewWillAppear(animated: Bool) {
-        recordButton.enabled = true
-        stopButton.hidden = true
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        super.viewWillAppear(animated)
+        setIsRecording(false)
     }
 
     @IBAction func recordTapped(sender: UIButton) {
-        recordButton.enabled = false
-        stopButton.hidden = false
-        recordingLabel.hidden = false
+        setIsRecording(true)
         
         do {
             let session = AVAudioSession.sharedInstance()
@@ -75,24 +63,28 @@ class RecordSoundsViewController: UIViewController, AVAudioRecorderDelegate {
             print("Failed to initialise audio recorder")
         }
     }
+    
+    func setIsRecording(recording: Bool) {
+        recordButton.enabled = !recording
+        stopButton.hidden = !recording
+        tapToRecordLabel.hidden = recording
+        recordingLabel.hidden = !recording
+    }
 
     @IBAction func stopTapped(sender: UIButton) {
-        recordingLabel.hidden = true
-        recordButton.enabled = true
-        stopButton.hidden = true
-        
+        setIsRecording(false)
         audioRecorder.stop()
     }
     
-    func audioRecorderDidFinishRecording(recorder: AVAudioRecorder, successfully flag: Bool) {
-        if flag {
+    func audioRecorderDidFinishRecording(recorder: AVAudioRecorder, successfully success: Bool) {
+        if success {
             print("Finished recording")
-            
-            recordedAudio = RecordedAudio()
-            recordedAudio.filePathUrl = recorder.url
-            recordedAudio.titleString = recorder.url.lastPathComponent
-            
-            self.performSegueWithIdentifier("stopRecording", sender: recordedAudio)
+            let recordedAudio = RecordedAudio(filePath: recorder.url, title: recorder.url.lastPathComponent!)
+            performSegueWithIdentifier("stopRecording", sender: recordedAudio)
+        } else {
+            let alert = UIAlertController(title: nil, message: NSLocalizedString("Error while recording audio. Please try again.", comment: "") , preferredStyle: .Alert)
+            alert.addAction(UIAlertAction(title: NSLocalizedString("Ok", comment: ""), style: .Default, handler: nil))
+            presentViewController(alert, animated: true, completion: nil)
         }
     }
     
